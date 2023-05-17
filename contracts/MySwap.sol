@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
+import "../node_modules/hardhat/console.sol";
+
 import "./interfaces/IUniswapV3SwapCallback.sol";
 import "./interfaces/IUniswapV3Pool.sol";
 import "./interfaces/IERC20.sol";
@@ -46,7 +48,7 @@ contract MySwap is IUniswapV3SwapCallback {
             address(this),
             true,
             amountIn,
-            4295128740,
+            4295128740, //minimum amount
             abi.encode(SwapCallbackData({addrList: addr, direction:true})));
         require(-amount1 >= min, "1");
     }
@@ -55,10 +57,10 @@ contract MySwap is IUniswapV3SwapCallback {
     function inverseSwap(address[] calldata addr, int256 amountIn, int256 min) public {
         (int256 amount0, ) = IUniswapV3Pool(addr[0]).swap(
             address(this),
-            true,
+            false,
             amountIn,
-            0,
-            abi.encode(SwapCallbackData({addrList: addr, direction:true})));
+            1461446703485210103287273052203988822378723970341, // max amount 
+            abi.encode(SwapCallbackData({addrList: addr, direction:false})));
         require(-amount0 >= min, "2");
     }
 
@@ -73,7 +75,7 @@ contract MySwap is IUniswapV3SwapCallback {
             IERC20(data.addrList[1]).transfer(data.addrList[0], uint256(amount0Delta));
         } else {
             // pay token1
-            IERC20(data.addrList[1]).transfer(data.addrList[0], uint256(amount1Delta));
+            IERC20(data.addrList[2]).transfer(data.addrList[0], uint256(amount1Delta));
         }
     }
 

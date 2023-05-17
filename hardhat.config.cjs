@@ -8,6 +8,9 @@ module.exports = {
       forking: {
         url: 'https://arb1.arbitrum.io/rpc',
       }
+    },
+    localhost: {
+      url: 'https://arb1.arbitrum.io/rpc',
     }
   }
 };

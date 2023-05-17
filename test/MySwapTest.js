@@ -84,6 +84,29 @@ describe("MySwap", function () {
     expect(arbBalanceAfterSwap.toString()).to.not.eq('0')
   });
 
+  it("should swap ARB to WETH", async function() {
+    
+    // WETH-ARB univ3 pool
+    let pool = '0x92c63d0e701CAAe670C9415d91C474F686298f00'
+    // weth
+    let token0 = '0x82af49447d8a07e3bd95bd0d56f35241523fbab1'
+    // arb
+    let token1 = '0x912CE59144191C1204E64559FE8253a0e49E6548'
+
+    let addresses = [pool, token0, token1]
+
+    let contractBalanceBeforeSwap = await ARBcontract.functions.balanceOf(mySwapContract.address)
+    expect(contractBalanceBeforeSwap.toString()).to.not.equal('0')
+
+    let halfTokens = "705612312342345363467"
+    let tx = await mySwapContract.functions.inverseSwap(addresses, halfTokens.toString(), '0')
+    await tx.wait()
+
+    let wethBalanceAfterSwap = await WETHcontract.balanceOf(mySwapContract.address)
+    expect(wethBalanceAfterSwap.toString()).to.not.equal('0')
+
+  })
+
   it("should withdraw all ARB to wallet", async function() {
 
     let contractBalanceBeforeWithdraw = await ARBcontract.functions.balanceOf(mySwapContract.address)
@@ -96,6 +119,22 @@ describe("MySwap", function () {
     expect(contractBalanceAfterWithdraw.toString()).to.equal('0')
 
     let walletBalance = await ARBcontract.functions.balanceOf(wallet.address)
+    expect(walletBalance.toString()).to.equal(contractBalanceBeforeWithdraw.toString())
+
+  });
+
+  it("should withdraw all WETH to wallet", async function() {
+
+    let contractBalanceBeforeWithdraw = await WETHcontract.functions.balanceOf(mySwapContract.address)
+    expect(contractBalanceBeforeWithdraw.toString()).to.not.equal('0')
+
+    let tx = await mySwapContract.functions.withdrawToken(WETHaddress)
+    await tx.wait()
+
+    let contractBalanceAfterWithdraw = await WETHcontract.functions.balanceOf(mySwapContract.address)
+    expect(contractBalanceAfterWithdraw.toString()).to.equal('0')
+
+    let walletBalance = await WETHcontract.functions.balanceOf(wallet.address)
     expect(walletBalance.toString()).to.equal(contractBalanceBeforeWithdraw.toString())
 
   });
