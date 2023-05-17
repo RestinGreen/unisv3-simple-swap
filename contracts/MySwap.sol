@@ -9,7 +9,7 @@ import "./interfaces/IERC20.sol";
 contract MySwap is IUniswapV3SwapCallback {
 
     modifier onlyOwner() {
-        require(msg.sender == owner);
+        require(msg.sender == owner, "0");
         _;
     }
 
@@ -25,7 +25,7 @@ contract MySwap is IUniswapV3SwapCallback {
     }
 
     struct SwapCallbackData {
-        address[] pool;
+        address[] addrList;
         // always true, tokenA < tokenB
         // true = tokenA -> tokenB
         // false = tokenB -> tokenA
@@ -46,10 +46,9 @@ contract MySwap is IUniswapV3SwapCallback {
             address(this),
             true,
             amountIn,
-            0,
-            abi.encode(SwapCallbackData({pool: addr, direction:true})));
-
-        require(amount1 >= min);
+            4295128740,
+            abi.encode(SwapCallbackData({addrList: addr, direction:true})));
+        require(-amount1 >= min, "1");
     }
 
     //this function swaps from tokenB -> tokenA
@@ -59,42 +58,31 @@ contract MySwap is IUniswapV3SwapCallback {
             true,
             amountIn,
             0,
-            abi.encode(SwapCallbackData({pool: addr, direction:true})));
-        require(amount0 >= min);
+            abi.encode(SwapCallbackData({addrList: addr, direction:true})));
+        require(-amount0 >= min, "2");
     }
 
 
     function uniswapV3SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata _data) external {
         SwapCallbackData memory data = abi.decode(_data, (SwapCallbackData));
-        require(msg.sender == data.pool[0]);
-        require(amount0Delta > 0 || amount1Delta > 0);
+        require(msg.sender == data.addrList[0], "3");
+        require(amount0Delta > 0 || amount1Delta > 0, "4");
 
         if (data.direction) {
-            // pay tokenA
-            IERC20(data.pool[1]).transfer(data.pool[1], amount0Delta)
+            // pay token0
+            IERC20(data.addrList[1]).transfer(data.addrList[0], uint256(amount0Delta));
         } else {
-            // pay tokenB
-            IERC20(data.pool[1]).transfer(data.pool[2], amount1Delta)
+            // pay token1
+            IERC20(data.addrList[1]).transfer(data.addrList[0], uint256(amount1Delta));
         }
-        
     }
 
-    function depositToken(address token) public onlyOwner  {
-
+    function depositToken(address token, uint256 amount) public onlyOwner  {
+        IERC20(token).transferFrom(msg.sender, address(this), amount);
     }
 
-    function withdrawToken() public onlyOwner {
-
-    }
-
-    function depositETH() public onlyOwner {
-
-    }
-    function withDrawETH() public onlyOwner{
-
-    }
-
-    function approveToken() public onlyOwner{
-
+    function withdrawToken(address token) public onlyOwner {
+        uint256 balance = IERC20(token).balanceOf(address(this));
+        IERC20(token).transfer(msg.sender, balance);
     }
 }
